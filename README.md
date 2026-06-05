@@ -27,17 +27,17 @@ This kit fixes those:
 
 ## Why this is additive over cmux's native "Resume Agent Sessions on Reopen"
 
-cmux now has a toggle that auto-relaunches agent terminals when cmux reopens after a quit. **Leave it on — it's good UX for that specific case.** The scripts here cover the failure modes cmux's native feature doesn't:
+cmux's "Resume Agent Sessions on Reopen" is a solid feature — **leave it on**. It writes `~/.cmuxterm/claude-hook-sessions.json` (tracked active session ID + workspace ID + surface ID + cwd + launch command), and on app relaunch it rebuilds workspaces and runs `claude --resume <id>` for each. That covers crashes, quits, even hard reboots — anything short of disk damage.
 
-| Failure mode | cmux native | this kit |
+This kit adds three things cmux's native feature doesn't:
+
+| Capability | cmux native | this kit |
 |---|---|---|
-| You quit cmux and reopen it | ✓ | ✓ |
-| Hard reboot (kernel panic, power loss) | ✗ — cmux state is in-memory | ✓ — disk-based checkpoint persists |
-| cmux upgrades and migrates state in a way that loses tabs | ✗ | ✓ |
-| You want yesterday's set of sessions, not now's | ✗ | ✓ — `--from-commit <sha>` reads from git history |
-| New machine setup with all your active sessions | ✗ | ✓ — checkpoint is git-tracked |
-| Sessions started outside cmux's agent integration | ✗ | ✓ — tracks any live Claude process |
-| Restore from before a corrupted workspace edit | ✗ | ✓ — restore from a prior commit |
+| **Historical recovery** — restore yesterday's set, not today's | ✗ — `claude-hook-sessions.json` is overwritten in place; no history | ✓ — `--from-commit <sha>` reads any prior snapshot from `~/.claude` git history |
+| **All-time session discovery** — find a session from 3 weeks ago | ✗ — once a session is closed, cmux drops it from the tracking file | ✓ — `claude-sessions` catalogs every transcript that exists, regardless of cmux's current set, with cwd / name / date / body-text filters |
+| **Cross-machine sync** — new laptop, same active sessions | ✗ — `~/.cmuxterm/` is local; you'd manually sync the file | ✓ — checkpoint is in `~/.claude` which is normally git-tracked + pushed to a private remote |
+
+For the everyday "restart cmux, get my tabs back" case, cmux's feature is enough — no need for this kit. The kit earns its keep when you want to look at past sessions, recover to a prior state, or pick up where you left off on a different machine.
 
 They don't conflict. If cmux relaunches a session and `claude-restore` would try to reopen the same one, `claude-restore` dedupes by UUID against currently-live processes and skips.
 
