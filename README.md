@@ -7,7 +7,19 @@ Survive crashes, restarts, and "where did that session go" with your live [Claud
 - **`claude-sessions`** — searchable catalog of every Claude session you have ever started, across every project. Goes back as far as your transcript retention setting (default 30 days).
 - **`claude-session-namer`** — optional zsh shell wrapper that asks for a session name on bare `claude` launches, so every session is searchable later.
 
-If you run 5+ Claude sessions at once, the built-in `claude --resume` picker surfaces a fraction of your history and forgets everything on crash. This kit fixes both.
+### Why this exists
+
+Built-in `claude --resume` does technically keep your transcripts (they're in `~/.claude/projects/*/UUID.jsonl`), but the picker has three limits that get painful at scale:
+
+1. **It's scoped to your current directory** — you only see sessions launched from the cwd you're in right now. To find a session from another project, you have to `cd` there first.
+2. **It shows the N most-recently-touched, not the set you had active.** After a crash, the picker can't distinguish your 8 working sessions from 200 historical ones.
+3. **It loses organizational context** — no record of cwd, no cmux workspace assignment, no "these belonged together."
+
+This kit fixes those:
+
+- `claude-sessions` is the cross-cwd catalog the picker isn't. Filter by date, name regex, cwd substring, or transcript-body search.
+- `claude-checkpoint` records the live, named subset — so after a crash you can restore the right 8 sessions, not guess at the right 8 out of 200.
+- `claude-restore` reopens them in the original cwds (and the right cmux workspaces if you use cmux).
 
 > **You might also like:** [`cmux-claude-tab-rename`](https://github.com/aparente/cmux-claude-tab-rename) — auto-rename cmux tabs to match Claude session names, with on-exit restore. Sibling project; separate problem.
 
