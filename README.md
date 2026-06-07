@@ -29,15 +29,16 @@ This kit fixes those:
 
 cmux's "Resume Agent Sessions on Reopen" is a solid feature — **leave it on**. It writes `~/.cmuxterm/claude-hook-sessions.json` (tracked active session ID + workspace ID + surface ID + cwd + launch command), and on app relaunch it rebuilds workspaces and runs `claude --resume <id>` for each. That covers crashes, quits, even hard reboots — anything short of disk damage.
 
-This kit adds three things cmux's native feature doesn't:
+This kit adds two things cmux's native feature doesn't:
 
 | Capability | cmux native | this kit |
 |---|---|---|
 | **Historical recovery** — restore yesterday's set, not today's | ✗ — `claude-hook-sessions.json` is overwritten in place; no history | ✓ — `--from-commit <sha>` reads any prior snapshot from `~/.claude` git history |
 | **All-time session discovery** — find a session from 3 weeks ago | ✗ — once a session is closed, cmux drops it from the tracking file | ✓ — `claude-sessions` catalogs every transcript that exists, regardless of cmux's current set, with cwd / name / date / body-text filters |
-| **Cross-machine sync** — new laptop, same active sessions | ✗ — `~/.cmuxterm/` is local; you'd manually sync the file | ✓ — checkpoint is in `~/.claude` which is normally git-tracked + pushed to a private remote |
 
-For the everyday "restart cmux, get my tabs back" case, cmux's feature is enough — no need for this kit. The kit earns its keep when you want to look at past sessions, recover to a prior state, or pick up where you left off on a different machine.
+For the everyday "restart cmux, get my tabs back" case, cmux's feature is enough — no need for this kit. The kit earns its keep when you want to look at past sessions or recover to a prior state.
+
+(Note on cross-machine: `claude --resume <UUID>` needs the local transcript at `~/.claude/projects/.../UUID.jsonl`, and transcripts are explicitly gitignored from `~/.claude` because they can contain pasted secrets. So this kit does not give you cross-machine session restore — Anthropic's web/remote-control features are what to look at for that.)
 
 They don't conflict. If cmux relaunches a session and `claude-restore` would try to reopen the same one, `claude-restore` dedupes by UUID against currently-live processes and skips.
 
